@@ -8,6 +8,7 @@ export interface Step {
   id?: string;
   run_id?: string;
   status?: string;
+  llm?: string;
 }
 
 export interface Run {

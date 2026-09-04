@@ -25,6 +25,10 @@ def require_token(x_internal_token: str | None = Header(default=None)) -> None:
         raise HTTPException(401, "missing or invalid X-Internal-Token")
 
 
+def llm_provider() -> str:
+    return os.environ.get("LLM_PROVIDER") or ("anthropic" if os.environ.get("ANTHROPIC_API_KEY") else "fake")
+
+
 class RunRequest(BaseModel):
     question: str
 
@@ -35,7 +39,7 @@ async def start_run(body: RunRequest) -> StreamingResponse:
 
     async def events():
         steps, answer, status = [], None, "done"
-        yield to_sse({"type": "run_started", "run_id": run_id})
+        yield to_sse({"type": "run_started", "run_id": run_id, "llm": llm_provider()})
         try:
             async for ev in run_agent(body.question, run_id=run_id):
                 steps.append(ev)
@@ -76,5 +80,4 @@ def get_ticket(ticket_id: str) -> dict:
 
 @app.get("/health")
 def health() -> dict:
-    return {"ok": True, "llm": os.environ.get("LLM_PROVIDER") or
-            ("anthropic" if os.environ.get("ANTHROPIC_API_KEY") else "fake")}
+    return {"ok": True, "llm": llm_provider()}

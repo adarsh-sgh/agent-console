@@ -34,6 +34,7 @@ export function RunPage() {
         ))}
       </div>
       {error && <p role="alert" className="error">{error}</p>}
+      {steps[0]?.llm && <p className="meta">model: {steps[0].llm}</p>}
       <Trace steps={steps} />
     </section>
   );
