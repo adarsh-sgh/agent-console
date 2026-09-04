@@ -1,0 +1,28 @@
+:root { color-scheme: light dark; font-family: ui-sans-serif, system-ui, sans-serif; }
+body { margin: 0; background: #111; color: #ddd; }
+main { max-width: 860px; margin: 0 auto; padding: 1.5rem; }
+header { display: flex; align-items: baseline; gap: 1.5rem; margin-bottom: 1rem; }
+h1 { font-size: 1.2rem; margin: 0; font-family: ui-monospace, monospace; }
+nav button { background: none; border: none; color: #888; cursor: pointer; padding: .2rem .4rem; }
+nav button[aria-current="true"] { color: #fff; border-bottom: 2px solid #4c8; }
+.ask { display: flex; gap: .5rem; }
+.ask input { flex: 1; padding: .6rem; background: #1b1b1b; color: #eee; border: 1px solid #333; border-radius: 4px; }
+button { padding: .5rem .9rem; border-radius: 4px; border: 1px solid #444; background: #222; color: #ddd; cursor: pointer; }
+button:disabled { opacity: .5; cursor: default; }
+.examples { display: flex; flex-wrap: wrap; gap: .4rem; margin: .6rem 0 1.2rem; }
+.examples button { font-size: .8rem; }
+.error { color: #f66; }
+.trace { list-style: none; padding: 0; margin: 0; border-left: 2px solid #333; }
+.step { padding: .5rem 0 .5rem 1rem; }
+.label { font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; color: #888; display: block; }
+.step.thought p { color: #aaa; font-style: italic; margin: .2rem 0; }
+.step.tool_call code { color: #8cf; }
+.step.observation pre { background: #1b1b1b; padding: .5rem; border-radius: 4px; overflow: auto; max-height: 240px; font-size: .8rem; margin: .2rem 0; }
+.step.final p { color: #cfc; white-space: pre-wrap; margin: .2rem 0; }
+.step.error p { color: #f66; }
+.history { list-style: none; padding: 0; }
+.history > li { border-bottom: 1px solid #222; padding: .4rem 0; }
+.history > li > button { width: 100%; text-align: left; display: flex; gap: .8rem; align-items: baseline; background: none; border: none; }
+.history time { margin-left: auto; color: #777; font-size: .8rem; }
+.status { font-size: .7rem; padding: .1rem .4rem; border-radius: 3px; background: #333; }
+.status.done { background: #264; } .status.error { background: #622; }
