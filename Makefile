@@ -1,12 +1,14 @@
 PY ?= python3
 VENV = agent/.venv
 
-.PHONY: setup dev agent gateway web test test-agent test-gateway test-web build
+.PHONY: setup dev agent gateway web mobile test test-agent test-gateway test-web test-mobile build bundle-mobile
 
 setup: ## install everything (python venv + npm)
 	$(PY) -m venv $(VENV) && $(VENV)/bin/pip install -q -r agent/requirements.txt
+	cd shared && npm install --silent
 	cd middleware && npm install --silent
 	cd web && npm install --silent
+	cd mobile && npm install --silent
 
 dev: ## run agent (:8000), gateway (:4000) and web (:5173) together
 	@trap 'kill 0' INT TERM; \
@@ -21,7 +23,10 @@ gateway:
 web:
 	cd web && npm run dev
 
-test: test-agent test-gateway test-web
+mobile: ## Expo dev server; point the app at the gateway over the LAN, not localhost
+	cd mobile && EXPO_PUBLIC_GATEWAY_URL=$${EXPO_PUBLIC_GATEWAY_URL:-http://localhost:4000} npx expo start
+
+test: test-agent test-gateway test-web test-mobile
 
 test-agent:
 	cd agent && .venv/bin/python -m pytest -q
@@ -32,5 +37,11 @@ test-gateway:
 test-web:
 	cd web && npx tsc --noEmit && npm test --silent
 
+test-mobile:
+	cd mobile && npx tsc --noEmit && npm test --silent
+
 build:
 	cd web && npm run build
+
+bundle-mobile: ## Metro bundle check; no simulator needed
+	cd mobile && npx expo export --platform ios

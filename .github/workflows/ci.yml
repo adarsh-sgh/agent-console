@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        dir: [middleware, web]
+        dir: [middleware, web, mobile]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -24,4 +24,5 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: ${{ matrix.dir }}/package-lock.json
+      - run: cd shared && npm install   # types-only devDependency the apps typecheck against
       - run: cd ${{ matrix.dir }} && npm ci && npx tsc --noEmit && npm test

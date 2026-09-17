@@ -5,5 +5,7 @@
   "description": "Trace data model, SSE client hook and presentational logic shared by the web viewer and the Expo app.",
   "type": "module",
   "main": "src/index.ts",
-  "peerDependencies": { "react": ">=18" }
+  "devDependencies": {
+    "@types/react": "^19.2.0"
+  }
 }

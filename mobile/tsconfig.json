@@ -1,0 +1,12 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "types": ["jest", "node"],
+    // shared/ is compiled from source; its own devDependency supplies the React types.
+    "paths": {
+      "@shared": ["../shared/src/index.ts"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx", "../shared/src"]
+}
