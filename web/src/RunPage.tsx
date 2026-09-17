@@ -1,6 +1,6 @@
 import { FormEvent, useState } from "react";
+import { fetchStream, useRun } from "@shared";
 import { Trace } from "./Trace";
-import { useRun } from "./useRun";
 
 const EXAMPLES = [
   "Which customers generated the most revenue?",
@@ -8,9 +8,11 @@ const EXAMPLES = [
   "What is 1200 * 0.18 + 40?",
 ];
 
+const stream = fetchStream("/api/runs");
+
 export function RunPage() {
   const [question, setQuestion] = useState(EXAMPLES[0]);
-  const { steps, running, error, ask } = useRun();
+  const { steps, running, error, ask } = useRun(stream);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();

@@ -8,7 +8,12 @@
     "strict": true,
     "skipLibCheck": true,
     "noEmit": true,
+    // shared/src lives outside this package, so point its bare imports back here.
+    "paths": {
+      "@shared": ["../shared/src/index.ts"],
+      "react": ["./node_modules/@types/react"]
+    },
     "types": ["vite/client", "vitest/globals", "@testing-library/jest-dom"]
   },
-  "include": ["src"]
+  "include": ["src", "../shared/src"]
 }

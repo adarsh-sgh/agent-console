@@ -1,0 +1,9 @@
+{
+  "name": "@agent-console/shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Trace data model, SSE client hook and presentational logic shared by the web viewer and the Expo app.",
+  "type": "module",
+  "main": "src/index.ts",
+  "peerDependencies": { "react": ">=18" }
+}

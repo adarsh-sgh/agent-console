@@ -1,8 +1,9 @@
 import { useCallback, useState } from "react";
-import { readSSE } from "./sse";
+import type { RunStream } from "./sse";
 import type { Step } from "./types";
 
-export function useRun() {
+/** Drives one run: steps accumulate in arrival order so the UI can render as they land. */
+export function useRun(stream: RunStream) {
   const [steps, setSteps] = useState<Step[]>([]);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -12,19 +13,13 @@ export function useRun() {
     setError(null);
     setRunning(true);
     try {
-      const res = await fetch("/api/runs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question }),
-      });
-      if (!res.ok) throw new Error(`gateway responded ${res.status}`);
-      await readSSE(res, (ev) => setSteps((prev) => [...prev, ev as Step]));
+      await stream(question, (step) => setSteps((prev) => [...prev, step]));
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setRunning(false);
     }
-  }, []);
+  }, [stream]);
 
   return { steps, running, error, ask };
 }

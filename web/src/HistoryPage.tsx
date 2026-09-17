@@ -1,19 +1,6 @@
 import { useEffect, useState } from "react";
+import { fetchRuns, type Run } from "@shared";
 import { Trace } from "./Trace";
-import type { Run } from "./types";
-
-const QUERY = `{ runs(limit: 50) { id question answer status createdAt steps { type content tool args id } } }`;
-
-export async function fetchRuns(): Promise<Run[]> {
-  const res = await fetch("/graphql", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query: QUERY }),
-  });
-  const body = await res.json();
-  if (body.errors?.length) throw new Error(body.errors[0].message);
-  return body.data.runs;
-}
 
 export function HistoryPage() {
   const [runs, setRuns] = useState<Run[] | null>(null);

@@ -1,4 +1,5 @@
-export type StepType = "run_started" | "thought" | "tool_call" | "observation" | "final" | "error" | "run_finished";
+export type StepType =
+  | "run_started" | "thought" | "tool_call" | "observation" | "final" | "error" | "run_finished";
 
 export interface Step {
   type: StepType;
