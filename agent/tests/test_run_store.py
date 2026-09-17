@@ -5,16 +5,18 @@ import pytest
 
 from agent_console.store import MongoRunStore, SqliteRunStore
 
+# Read at import: the autouse fixture in conftest clears MONGO_URL so the API tests stay on SQLite.
+MONGO_URL = os.environ.get("MONGO_URL")
+
 
 def make_sqlite():
     return SqliteRunStore()
 
 
 def make_mongo():
-    url = os.environ.get("MONGO_URL")
-    if not url:
+    if not MONGO_URL:
         pytest.skip("MONGO_URL unset; MongoDB store not exercised")
-    s = MongoRunStore(url, os.environ.get("MONGO_DB", "agent_console_test"))
+    s = MongoRunStore(MONGO_URL, os.environ.get("MONGO_DB", "agent_console_test"))
     s.runs.delete_many({})
     return s
 
