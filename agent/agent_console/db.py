@@ -1,9 +1,6 @@
-"""SQLite: sample business tables the SQL tool queries, plus the run-history table."""
-import json
+"""SQLite: the sample business tables the SQL tool queries. Run history lives in store.py."""
 import os
 import sqlite3
-import uuid
-from datetime import datetime, timezone
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS customers (
@@ -16,10 +13,6 @@ CREATE TABLE IF NOT EXISTS orders (
 CREATE TABLE IF NOT EXISTS tickets (
   id TEXT PRIMARY KEY, customer_id INTEGER NOT NULL REFERENCES customers(id),
   subject TEXT NOT NULL, priority TEXT NOT NULL, status TEXT NOT NULL
-);
-CREATE TABLE IF NOT EXISTS runs (
-  id TEXT PRIMARY KEY, question TEXT NOT NULL, answer TEXT, status TEXT NOT NULL,
-  steps TEXT NOT NULL, created_at TEXT NOT NULL
 );
 """
 
@@ -76,37 +69,3 @@ def get_ticket(ticket_id: str) -> dict | None:
             (ticket_id,),
         ).fetchone()
         return dict(row) if row else None
-
-
-def create_run(question: str) -> str:
-    run_id = uuid.uuid4().hex[:12]
-    with connect() as conn:
-        conn.execute(
-            "INSERT INTO runs VALUES (?,?,?,?,?,?)",
-            (run_id, question, None, "running", "[]", datetime.now(timezone.utc).isoformat()),
-        )
-    return run_id
-
-
-def finish_run(run_id: str, status: str, answer: str | None, steps: list[dict]) -> None:
-    with connect() as conn:
-        conn.execute("UPDATE runs SET status=?, answer=?, steps=? WHERE id=?",
-                     (status, answer, json.dumps(steps), run_id))
-
-
-def _row_to_run(row: sqlite3.Row) -> dict:
-    d = dict(row)
-    d["steps"] = json.loads(d["steps"])
-    return d
-
-
-def list_runs(limit: int = 50) -> list[dict]:
-    with connect() as conn:
-        rows = conn.execute("SELECT * FROM runs ORDER BY created_at DESC LIMIT ?", (limit,)).fetchall()
-        return [_row_to_run(r) for r in rows]
-
-
-def get_run(run_id: str) -> dict | None:
-    with connect() as conn:
-        row = conn.execute("SELECT * FROM runs WHERE id=?", (run_id,)).fetchone()
-        return _row_to_run(row) if row else None

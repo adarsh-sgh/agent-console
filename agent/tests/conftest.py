@@ -1,13 +1,15 @@
 import httpx
 import pytest
 
-from agent_console import db, tools
+from agent_console import db, store, tools
 from agent_console.server import app
 
 
 @pytest.fixture(autouse=True)
 def fresh_db(tmp_path, monkeypatch):
     monkeypatch.setenv("DB_PATH", str(tmp_path / "test.db"))
+    monkeypatch.delenv("MONGO_URL", raising=False)  # API tests always run on SQLite
+    monkeypatch.setattr(store, "_store", None)
     monkeypatch.setenv("LLM_PROVIDER", "fake")
     monkeypatch.setenv("TICKETS_API_URL", "http://agent")
     db.init_db()

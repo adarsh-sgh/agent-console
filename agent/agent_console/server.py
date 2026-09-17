@@ -6,13 +6,14 @@ from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from . import db
+from . import db, store
 from .graph import run_agent, to_sse
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     db.init_db()
+    store.get_store()
     yield
 
 
@@ -35,7 +36,8 @@ class RunRequest(BaseModel):
 
 @app.post("/runs", dependencies=[Depends(require_token)])
 async def start_run(body: RunRequest) -> StreamingResponse:
-    run_id = db.create_run(body.question)
+    runs = store.get_store()
+    run_id = runs.create_run(body.question)
 
     async def events():
         steps, answer, status = [], None, "done"
@@ -50,7 +52,7 @@ async def start_run(body: RunRequest) -> StreamingResponse:
             status = "error"
             yield to_sse({"type": "error", "content": str(e)})
         finally:
-            db.finish_run(run_id, status, answer, steps)
+            runs.finish_run(run_id, status, answer, steps)
         yield to_sse({"type": "run_finished", "run_id": run_id, "status": status})
 
     return StreamingResponse(events(), media_type="text/event-stream",
@@ -59,12 +61,12 @@ async def start_run(body: RunRequest) -> StreamingResponse:
 
 @app.get("/runs", dependencies=[Depends(require_token)])
 def list_runs(limit: int = 50) -> list[dict]:
-    return db.list_runs(limit)
+    return store.get_store().list_runs(limit)
 
 
 @app.get("/runs/{run_id}", dependencies=[Depends(require_token)])
 def get_run(run_id: str) -> dict:
-    run = db.get_run(run_id)
+    run = store.get_store().get_run(run_id)
     if not run:
         raise HTTPException(404, "run not found")
     return run

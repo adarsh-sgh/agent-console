@@ -1,0 +1,14 @@
+# Optional: run history in MongoDB instead of SQLite.
+#   docker compose up -d mongo && export MONGO_URL=mongodb://localhost:27017
+services:
+  mongo:
+    image: mongo:8
+    ports: ["27017:27017"]
+    volumes: [mongo-data:/data/db]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ping:1})"]
+      interval: 5s
+      retries: 10
+
+volumes:
+  mongo-data:

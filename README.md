@@ -14,7 +14,8 @@ A small full-stack LLM agent you can watch think. A LangGraph ReAct agent (reaso
    ▼
  LangGraph:  reason ──tool_calls?──▶ act ──▶ reason … ──▶ END
    LLM: ChatAnthropic | FakeChatModel     tools: sql_query · calculator · fetch_url · lookup_ticket
-   tracing: Langfuse callback (no-op unless keys set)     storage: SQLite (sample tables + runs)
+   tracing: Langfuse callback (no-op unless keys set)
+   storage: SQLite (sample tables) · run history: SQLite by default, MongoDB when MONGO_URL is set
 ```
 
 ## Run
@@ -27,12 +28,20 @@ make test         # pytest e2e over the graph + API, supertest on the gateway, V
 
 Open http://localhost:5173. Copy `.env.example` to `.env` and export it to use real Claude or Langfuse.
 
+Run history goes to SQLite unless `MONGO_URL` is set:
+
+```
+docker compose up -d mongo
+MONGO_URL=mongodb://localhost:27017 make agent
+```
+
 ## Design decisions
 
 - **Hand-written graph, not `create_react_agent`.** Two nodes (`reason`, `act`) and one conditional edge make the loop explicit, and `stream_mode="updates"` gives one event per node so the UI can show thought / tool call / observation / final without parsing model output.
 - **LLM is an injected `BaseChatModel`.** `FakeChatModel` keyword-routes to a tool and answers from the observation. The same graph, FastAPI stream and tests run against either model; swapping providers is one env var.
 - **SSE over a POST, hand-rolled on both ends.** The browser can't POST with `EventSource`, so the UI reads `fetch` body chunks and splits on blank lines; FastAPI writes `event:`/`data:` frames from a generator. The gateway just pipes bytes.
 - **Gateway owns the trust boundary.** Express adds `X-Internal-Token` so the agent service is never called directly by the browser; the GraphQL layer is read-only over history and is the place a schema for multiple backends would grow.
+- **Storage is one `RunStore` interface, two backends.** SQLite keeps the demo keyless and dependency-free; `MONGO_URL` swaps in MongoDB, where a run is one document and its steps nest as an array instead of a JSON blob. The sample business tables the SQL tool queries stay in SQLite either way — they are the agent's subject matter, not its state.
 - **Tool errors are observations.** A 404 ticket or a bad SQL statement comes back as `error: …` text so the model can recover, instead of aborting the run.
 
 ## Next
