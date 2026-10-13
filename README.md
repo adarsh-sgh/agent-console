@@ -3,9 +3,9 @@
 A small full-stack LLM agent you can watch think. A LangGraph ReAct agent (reason → tool call → observe, looped) answers questions over a sample business DB, a tickets REST API, a calculator and HTTP fetch. Every step streams to the viewer over SSE as it happens; finished runs are persisted and browsable through a GraphQL history page. Two viewers render the same trace — a React web app and an Expo React Native app — from one shared TypeScript package. Runs with Claude (`claude-sonnet-5` via `langchain-anthropic`) when `ANTHROPIC_API_KEY` is set, and with a deterministic scripted LLM otherwise, so the demo and the tests need no key.
 
 ```
- web viewer (React/Vite :5173)     mobile viewer (Expo / React Native)
+ web viewer (React/Vite/Tailwind :5173)   mobile viewer (Expo / React Native)
    └───────────────┬────────────────────────┘
-                   │  shared/: step + run types · SSE parser · useRun hook · trace formatting
+                   │  shared/: step + run types · SSE parser · useRun hook · trace formatting · palette
                    │  POST /api/runs (SSE)  ·  POST /graphql
                    ▼
  Express gateway (:4000) ── graphql-yoga schema: runs / run(id)
@@ -54,7 +54,8 @@ MONGO_URL=mongodb://localhost:27017 make agent
 ```
 
 `make test-agent` runs the store contract against SQLite and skips the MongoDB case
-unless `MONGO_URL` points at a server.
+unless `MONGO_URL` points at a server. CI starts a `mongo:8` service and sets `MONGO_URL`,
+so both backends are exercised on every push.
 
 ## Design decisions
 
@@ -62,6 +63,7 @@ unless `MONGO_URL` points at a server.
 - **LLM is an injected `BaseChatModel`.** `FakeChatModel` keyword-routes to a tool and answers from the observation. The same graph, FastAPI stream and tests run against either model; swapping providers is one env var.
 - **SSE over a POST, hand-rolled on both ends.** The browser can't POST with `EventSource`, so the UI reads `fetch` body chunks and splits on blank lines; FastAPI writes `event:`/`data:` frames from a generator. The gateway just pipes bytes.
 - **`shared/` is source, not a build artifact.** It holds everything about a run that isn't a rendered element, and each app aliases `@shared` to its `src/` (Vite `resolve.alias`, Metro `watchFolders`). No build step to keep in sync, and `react` always resolves from the app, so there is one copy of it. The split falls where the platforms genuinely differ: transports and primitives are per-app, the data model and formatting are not.
+- **One palette, two styling systems.** `shared/src/theme.ts` holds the colours; the web app feeds them to Tailwind v4 through `@config` (`bg-card`, `text-accent`, `border-line` …) and the Expo app builds its `StyleSheet` from the same object. Web styling is utility classes in the components plus one `@apply`'d `.btn`; step types map to a tone class (`thought` dim italic, `final` green, `error` red) instead of per-type CSS selectors.
 - **Gateway owns the trust boundary.** Express adds `X-Internal-Token` so the agent service is never called directly by the browser; the GraphQL layer is read-only over history and is the place a schema for multiple backends would grow.
 - **Storage is one `RunStore` interface, two backends.** SQLite keeps the demo keyless and dependency-free; `MONGO_URL` swaps in MongoDB, where a run is one document and its steps nest as an array instead of a JSON blob. The sample business tables the SQL tool queries stay in SQLite either way — they are the agent's subject matter, not its state.
 - **Tool errors are observations.** A 404 ticket or a bad SQL statement comes back as `error: …` text so the model can recover, instead of aborting the run.
