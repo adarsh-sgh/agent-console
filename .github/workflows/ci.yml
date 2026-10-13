@@ -3,6 +3,12 @@ on: [push, pull_request]
 jobs:
   agent:
     runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:8
+        ports: ["27017:27017"]
+    env:
+      MONGO_URL: mongodb://localhost:27017   # runs the MongoDB half of the store contract
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -26,3 +32,5 @@ jobs:
           cache-dependency-path: ${{ matrix.dir }}/package-lock.json
       - run: cd shared && npm install   # types-only devDependency the apps typecheck against
       - run: cd ${{ matrix.dir }} && npm ci && npx tsc --noEmit && npm test
+      - if: matrix.dir == 'web'
+        run: cd web && npm run build   # compiles Tailwind against the shared palette
